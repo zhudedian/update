@@ -26,15 +26,15 @@ public class UpdateUtil {
         if (!zip.exists()){
             return;
         }
-        if (!path.equals("/data/update20180119.zip")){
-            copyFile(path,"/data/update20180119.zip");
-        }
+//        if (!path.equals("/data/update20180119.zip")){
+//            copyFile(path,"/data/update20180119.zip");
+//        }
         try {
-            Runtime.getRuntime().exec("chmod 644 " + "/data/update20180119.zip");
+            Runtime.getRuntime().exec("chmod 644 " + path);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        createRecoveryCommand();
+        createRecoveryCommand(path);
         try {
             Thread.sleep(3000);
             Class SystemProperties = Class.forName("android.os.SystemProperties");
@@ -84,7 +84,7 @@ public class UpdateUtil {
             e.printStackTrace();
         }
     }
-    private static boolean createRecoveryCommand() {
+    private static boolean createRecoveryCommand(String path) {
         File file;
         String res = "";
         file = new File("/cache/recovery/command");
@@ -99,8 +99,8 @@ public class UpdateUtil {
         }catch(IOException e){
             e.printStackTrace();
         }
-        res += "--update_package=/data/";
-        res += "update20180119.zip";
+        res += "--update_package=";
+        res += path;
         try {
             FileOutputStream fout = new FileOutputStream(file);
             byte[] buffer = res.getBytes();

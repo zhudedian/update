@@ -29,4 +29,5 @@ dependencies {
     compile files('src/main/lib/httpclient-4.2.5.jar')
     compile files('src/main/lib/httpcore-4.4.4.jar')
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.google.code.gson:gson:2.7'
 }

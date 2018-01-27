@@ -1,12 +1,10 @@
 package com.ider.update;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -20,14 +18,19 @@ import android.widget.Toast;
 import com.ider.update.circle.WaveProgress;
 import com.ider.update.down.CustomerHttpClient;
 import com.ider.update.down.HTTPFileDownloadTask;
+import com.ider.update.util.MD5Util;
 import com.ider.update.util.UpdateUtil;
 import com.ider.update.view.BaseRelative;
 
 import org.apache.http.client.HttpClient;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import static android.R.attr.path;
+import static android.os.Build.VERSION_CODES.M;
 
 public class DownloadActivity extends AppCompatActivity implements View.OnClickListener,View.OnKeyListener{
     private String TAG = "DownloadActivity";
@@ -36,6 +39,8 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
     private TextView updating,downFail;
     private URI mHttpUri;
     private Context mContext;
+    private String Md5;
+    private String newVersion;
     private WaveProgress waveProgress;
     private BaseRelative retry,cancel,update;
     private DownloadActivity.HTTPdownloadHandler mHttpDownloadHandler;
@@ -50,6 +55,8 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_download);
         Intent intent = getIntent();
         String url = intent.getStringExtra("url");
+        Md5 = intent.getStringExtra("Md5");
+        newVersion = intent.getStringExtra("newVersion");
         ActionBar actionBar= getSupportActionBar();
         if (actionBar!=null){
             actionBar.hide();
@@ -74,15 +81,15 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
         mHttpDownloadHandler = new DownloadActivity.HTTPdownloadHandler();
 
         try {
-            mHttpUri = new URI("http://192.168.2.27:8080/otaupdate/xml/download/up/1.zip");
-//            mHttpUri = new URI(url);
+//            mHttpUri = new URI("http://www.trehere.com:8089/ydh/upload/48f40ca2-4959-4d4d-9e7d-7bb7e41c6b6c.zip");
+            mHttpUri = new URI(url);
         } catch (URISyntaxException e) {
             Toast.makeText(DownloadActivity.this,"网络异常，请重试！",Toast.LENGTH_LONG).show();
             finish();
             e.printStackTrace();
         }
         Log.i(TAG,FLASH_ROOT);
-        mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri,FLASH_ROOT, "/updata.zip", 1);
+        mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri,"/data/", "update"+newVersion+".zip", 1);
         mHttpTask.setProgressHandler(mHttpDownloadHandler);
         mHttpTask.start();
         isUpdating = true;
@@ -90,21 +97,21 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View view){
         if (view.getId()==R.id.retry){
-            mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri,FLASH_ROOT, "/updata.zip", 1);
+            mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri,"/data/", "update"+newVersion+".zip", 1);
             mHttpTask.setProgressHandler(mHttpDownloadHandler);
             mHttpTask.start();
             retry.setVisibility(View.GONE);
             cancel.setVisibility(View.GONE);
             downFail.setVisibility(View.GONE);
         }else if (view.getId()==R.id.cancel){
-            File f = new File("/data/updata.zip");
-            if (f.exists()){
-                f.delete();
-            }
+//            File f = new File("/data/updata.zip");
+//            if (f.exists()){
+//                f.delete();
+//            }
             isUpdating =false;
             finish();
         }else if(view.getId()==R.id.update_button){
-            UpdateUtil.startUpdate("/data/update20180119.zip");
+            UpdateUtil.startUpdate("/data/update"+newVersion+".zip");
         }
     }
     private void setDownloadInfoViews(long contentLength, long receivedCount, long receivedPerSecond) {
@@ -138,8 +145,10 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
         if(keyCode == KeyEvent.KEYCODE_BACK) {
+            if (mHttpTask!=null) {
+                mHttpTask.stopDownload();
+            }
             finish();
-            mHttpTask.stopDownload();
             return true;
         }
         return false;
@@ -168,7 +177,14 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
                 break;
                 case HTTPFileDownloadTask.PROGRESS_DOWNLOAD_COMPLETE : {
                     waveProgress.setValue(100);
-                    update.setVisibility(View.VISIBLE);
+                    if (MD5Util.compareMd5(new File("/data/update"+newVersion+".zip"),Md5)) {
+                        cancel.setVisibility(View.VISIBLE);
+                        update.setVisibility(View.VISIBLE);
+                    }else {
+                        retry.setVisibility(View.VISIBLE);
+                        cancel.setVisibility(View.VISIBLE);
+                        downFail.setVisibility(View.VISIBLE);
+                    }
                 }
                 break;
                 case HTTPFileDownloadTask.PROGRESS_DOWNLOAD_FAILED : {

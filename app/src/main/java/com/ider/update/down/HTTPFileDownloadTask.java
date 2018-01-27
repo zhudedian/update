@@ -195,22 +195,8 @@ public class HTTPFileDownloadTask extends Thread {
 				f.delete();
 				Log.d(TAG, "finish(): delete the temp file!");
 			}
-			File update = new File("/data/updata.zip");
-
-			FileInputStream fis = null;
-			fis = new FileInputStream(update);
-			long size = fis.available();
-			Log.i(TAG,size+"");
-			if (size<1024*1024){
-				update.delete();
-				onProgressDownloadFailed();
-			}else {
-				update.renameTo(new File("/data/update20180119.zip"));
-				onProgressDownloadComplete();
-				Log.d(TAG, "download successfull");
-			}
-			
-
+			onProgressDownloadComplete();
+			Log.d(TAG, "download successfull");
 			return;
 		}else if(err == ERR_REQUEST_STOP) {
 			mDownloadThreadPool.shutdownNow();
