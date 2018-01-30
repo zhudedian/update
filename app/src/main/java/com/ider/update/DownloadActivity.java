@@ -89,10 +89,17 @@ public class DownloadActivity extends AppCompatActivity implements View.OnClickL
             e.printStackTrace();
         }
         Log.i(TAG,FLASH_ROOT);
-        mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri,"/data/", "update"+newVersion+".zip", 1);
-        mHttpTask.setProgressHandler(mHttpDownloadHandler);
-        mHttpTask.start();
-        isUpdating = true;
+        File updateZip = new File("/data/update"+newVersion+".zip");
+        if (updateZip.exists()&&MD5Util.compareMd5(updateZip,Md5)){
+            waveProgress.setValue(100);
+            cancel.setVisibility(View.VISIBLE);
+            update.setVisibility(View.VISIBLE);
+        }else {
+            mHttpTask = new HTTPFileDownloadTask(mHttpClient, mHttpUri, "/data/", "update" + newVersion + ".zip", 1);
+            mHttpTask.setProgressHandler(mHttpDownloadHandler);
+            mHttpTask.start();
+            isUpdating = true;
+        }
     }
     @Override
     public void onClick(View view){

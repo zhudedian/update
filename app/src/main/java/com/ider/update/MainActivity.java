@@ -67,17 +67,23 @@ public class MainActivity extends AppCompatActivity {
             public void resultHandle(ServerInfo serverInfo) {
                 textView1.setText(DeviceUtil.getLocalDeviceInfo());
                 String info = "新固件版本：";
-                if (serverInfo!= null&&serverInfo.getUrl()!=null){
-                    long size = Long.parseLong(serverInfo.getSize());
-                    info += serverInfo.getNewVersion()+"\n";
-                    info += "升级包大小："+getSize(size)+"\n";
-                    info += "升级说明："+serverInfo.getMsg();
-                    textView2.setText("检测到新版本");
-                    textView3.setText(info);
-                    downloadUrl=serverInfo.getUrl();
-                    Md5 = serverInfo.getMd5();
-                    newVersion = serverInfo.getNewVersion();
-                    update.setVisibility(View.VISIBLE);
+                if (serverInfo!= null&&serverInfo.getCode().equals("0")){
+                    ServerInfo.DataBean dataBean = serverInfo.getData().get(0);
+                    if (dataBean!=null) {
+                        long size = Long.parseLong(dataBean.getNewSize());
+                        info += dataBean.getNewVersion() + "\n";
+                        info += "升级包大小：" + getSize(size) + "\n";
+                        info += "升级说明：" + dataBean.getUpgradeInfo();
+                        textView2.setText("检测到新版本");
+                        textView3.setText(info);
+                        downloadUrl = dataBean.getUrl();
+                        Md5 = dataBean.getMd5();
+                        newVersion = dataBean.getNewVersion();
+                        update.setVisibility(View.VISIBLE);
+                    }else {
+                        textView2.setText("已经是最新版本");
+                        update.setVisibility(View.GONE);
+                    }
                 }else {
                     textView2.setText("已经是最新版本");
                     update.setVisibility(View.GONE);
